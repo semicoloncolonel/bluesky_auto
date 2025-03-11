@@ -70,15 +70,18 @@ def create_bluesky_post(entry, hashtags):
     title = entry.get('title', '')
     link = entry.get('link', '')
 
-    # Create post content with title, link, and hashtags
-    content = f"{title}\n\n{link}\n\n{' '.join(hashtags)}"
+    # Prepend "From the White House:" to the title
+    modified_title = f"From the White House: {title}"
+
+    # Create post content with modified title, link, and hashtags
+    content = f"{modified_title}\n\n{link}\n\n{' '.join(hashtags)}"
 
     # Ensure content doesn't exceed Bluesky's character limit (300)
     if len(content) > 300:
         # Truncate title if necessary
         available_space = 300 - len(link) - len(' '.join(hashtags)) - 4  # 4 for newlines
-        title = title[:available_space] + '...'
-        content = f"{title}\n\n{link}\n\n{' '.join(hashtags)}"
+        modified_title = modified_title[:available_space] + '...'
+        content = f"{modified_title}\n\n{link}\n\n{' '.join(hashtags)}"
 
     return content
 
