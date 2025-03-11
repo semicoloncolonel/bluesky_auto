@@ -16,9 +16,12 @@ def setup_gemini():
 def load_posted_entries():
     try:
         with open('posted_entries.json', 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
+            content = f.read().strip()
+            if not content:
+                return {}  # Return empty dictionary if file is empty
+            return json.loads(content)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}  # Return empty dictionary if file doesn't exist or has invalid JSON
 
 def save_posted_entries(posted):
     with open('posted_entries.json', 'w') as f:
@@ -67,24 +70,44 @@ def generate_hashtags_with_gemini(model, title, description):
         return [f"#{word.lower()}" for word in words if word.isalnum()]
 
 def create_bluesky_post(entry, hashtags):
-    title = entry.get('title', '')
-    link = entry.get('link', '')
+    title = entry.get('title', '').strip()
+    link = entry.get('link', '').strip()
+
+    # Ensure we have valid content
+    if not title or not link:
+        print("Error: Missing title or link in RSS entry.")
+        return None  # Return None if data is incomplete
 
     # Prepend "From the White House:" to the title
     modified_title = f"From the White House: {title}"
 
-    # Create post content with modified title, link, and hashtags
+    # Create post content
     content = f"{modified_title}\n\n{link}\n\n{' '.join(hashtags)}"
+
+    # Debugging: Print post length
+    print(f"Post Length: {len(content)} characters")
 
     # Ensure content doesn't exceed Bluesky's character limit (300)
     if len(content) > 300:
-        # Truncate title if necessary
+        # Calculate available space for truncation
         available_space = 300 - len(link) - len(' '.join(hashtags)) - 4  # 4 for newlines
-        modified_title = modified_title[:available_space] + '...'
+        if available_space > len("From the White House: "):  # Ensure at least part of the title remains
+            modified_title = modified_title[:available_space] + '...'
+        else:
+            modified_title = "From the White House: (Truncated)"
+
         content = f"{modified_title}\n\n{link}\n\n{' '.join(hashtags)}"
+
+    print(f"Final Post: {content}")  # Debugging output
 
     return content
 
+def save_posted_entries(posted):
+    try:
+        with open('posted_entries.json', 'w') as f:
+            json.dump(posted, f, indent=4)
+    except Exception as e:
+        print(f"Error saving posted entries: {str(e)}")
 def main():
     try:
         # Initialize Gemini
