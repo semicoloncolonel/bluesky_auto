@@ -27,14 +27,15 @@ def save_posted_entries(posted):
 def generate_hashtags_with_gemini(model, title, description):
     prompt = f"""
     Generate 5 relevant hashtags for a social media post with the following content:
-    Title: Here's the latest from the Trump White House: {title}
+    Title: {title}
     Description: {description}
 
     Rules for hashtags:
     1. No spaces in hashtags
     2. Use camelCase for multiple words
-    3. No special characters except numbers
-    4. Return only the hashtags, one per line, starting with #
+    3. Keep them relevant to the content
+    4. No special characters except numbers
+    5. Return only the hashtags, one per line, starting with #
     """
 
     try:
